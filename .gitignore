@@ -1,0 +1,183 @@
+# Python cache and compiled files
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+
+# Distribution / packaging
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+pip-wheel-metadata/
+share/python-wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+MANIFEST
+
+# PyInstaller
+*.manifest
+*.spec
+
+# Installer logs
+pip-log.txt
+pip-delete-this-directory.txt
+
+# Unit test / coverage reports
+htmlcov/
+.tox/
+.nox/
+.coverage
+.coverage.*
+.cache
+nosetests.xml
+coverage.xml
+*.cover
+*.py,cover
+.hypothesis/
+.pytest_cache/
+cover/
+
+# Environment variables and configuration
+.env
+.env.local
+.env.*.local
+.venv
+env/
+venv/
+ENV/
+env.bak/
+venv.bak/
+
+# Jupyter Notebook
+.ipynb_checkpoints
+
+# IPython
+profile_default/
+ipython_config.py
+
+# pyenv
+.python-version
+
+# pipenv
+Pipfile.lock
+
+# PEP 582
+__pypackages__/
+
+# Celery stuff
+celerybeat-schedule
+celerybeat.pid
+
+# SageMath parsed files
+*.sage.py
+
+# Spyder project settings
+.spyderproject
+.spyproject
+
+# Rope project settings
+.ropeproject
+
+# mkdocs documentation
+/site
+
+# mypy
+.mypy_cache/
+.dmypy.json
+dmypy.json
+
+# Pyre type checker
+.pyre/
+
+# pytype static type analyzer
+.pytype/
+
+# Cython debug symbols
+cython_debug/
+
+# Stock analysis specific files
+# Downloaded PDFs and analysis outputs
+downloads/
+analysis_output/
+pdf_cache/
+temp_analysis/
+CLAUDE-EVERYDAY/
+
+# Generated CSV files from market analysis
+*.csv
+limit_up_stocks_*.csv
+high_volume_*.csv
+*day_ranking_*.csv
+*_analysis_*.csv
+
+# Generated Excel reports
+*.xlsx
+limit_up_report_*.xlsx
+financial_analysis_*.xlsx
+
+# Generated JSON analysis results
+*_analysis_*.json
+stock_analysis_*.json
+
+# Log files
+*.log
+logs/
+analysis_logs/
+
+# Temporary files
+*.tmp
+*.temp
+temp/
+
+# IDE and editor files
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# Mac specific
+.DS_Store
+.AppleDouble
+.LSOverride
+
+# Windows specific
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+
+# Linux specific
+*~
+
+# Backup files
+*.bak
+*.backup
+*.old
+
+# Database files (if any)
+*.db
+*.sqlite
+*.sqlite3
+
+# API keys and sensitive data (extra protection)
+*token*
+*key*
+*secret*
+config.ini
+settings.ini
+
+# Large data files
+*.h5
+*.hdf5
+*.parquet
