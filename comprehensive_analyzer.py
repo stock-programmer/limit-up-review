@@ -13,7 +13,7 @@ import time
 
 from market_data import MarketAnalyzer
 from pdf_downloader import CninfoDownloader
-from pdf_processor import PDFTextExtractor, PDFTableExtractor, FinancialPDFAnalyzer
+from llm_pdf_processor import FinancialReportAnalyzer
 
 
 class ComprehensiveStockAnalyzer:
@@ -32,15 +32,7 @@ class ComprehensiveStockAnalyzer:
         # 初始化各个分析器
         self.market_analyzer = MarketAnalyzer()
         self.pdf_downloader = CninfoDownloader()
-        self.text_extractor = PDFTextExtractor()
-        self.table_extractor = PDFTableExtractor()
-        self.financial_analyzer = FinancialPDFAnalyzer()
-        
-        # 主营业务关键词
-        self.business_keywords = [
-            '主营业务', '经营范围', '业务范围', '主要业务', '核心业务',
-            '公司主要从事', '公司业务', '经营活动', '主要产品'
-        ]
+        self.financial_analyzer = FinancialReportAnalyzer()
         
         # 利好消息关键词
         self.positive_keywords = [
@@ -176,7 +168,7 @@ class ComprehensiveStockAnalyzer:
     
     def _get_financial_info(self, stock_code: str) -> Dict[str, Any]:
         """
-        获取股票财务信息
+        获取股票财务信息（使用LLM分析）
         
         Args:
             stock_code (str): 股票代码
@@ -203,22 +195,27 @@ class ComprehensiveStockAnalyzer:
                 )
             
             if financial_files:
-                # 分析最新的财务报告
+                # 使用LLM分析最新的财务报告
                 latest_report = financial_files[0]
+                print(f"  使用LLM分析财务报告: {os.path.basename(latest_report)}")
                 
-                # 提取文本内容
-                text_content = self.text_extractor.extract_text(latest_report)
+                # 使用LLM分析财务报告
+                analysis_result = self.financial_analyzer.analyze_financial_report(latest_report)
                 
-                # 提取主营业务信息
-                business_info = self._extract_business_info(text_content)
-                financial_info['business_info'] = business_info
-                
-                # 分析财务数据
-                financial_analysis = self.financial_analyzer.analyze_financial_pdf(latest_report)
-                financial_info['financial_data'] = {
-                    'key_indicators': financial_analysis.get('key_indicators', {}),
-                    'financial_ratios': financial_analysis.get('financial_ratios', {})
-                }
+                if analysis_result['success']:
+                    # 提取主营业务信息
+                    business_info = self.financial_analyzer.extract_business_info(analysis_result)
+                    financial_info['business_info'] = business_info
+                    
+                    # 提取财务数据
+                    financial_data = self.financial_analyzer.extract_financial_data(analysis_result)
+                    financial_info['financial_data'] = financial_data
+                    
+                    print(f"  LLM分析完成: 提取到 {len(business_info)} 项业务信息，{len(financial_data.get('key_indicators', {}))} 项财务指标")
+                else:
+                    print(f"  LLM分析失败: {analysis_result.get('error', '未知错误')}")
+                    # 降级到简单方法（如果需要的话）
+                    financial_info['business_info'] = self._fallback_business_extraction(latest_report)
             
             return financial_info
             
@@ -226,12 +223,12 @@ class ComprehensiveStockAnalyzer:
             print(f"获取 {stock_code} 财务信息失败: {e}")
             return financial_info
     
-    def _extract_business_info(self, text_content: str) -> Dict[str, str]:
+    def _fallback_business_extraction(self, pdf_path: str) -> Dict[str, str]:
         """
-        从财报文本中提取主营业务信息
+        降级方法：简单提取主营业务信息
         
         Args:
-            text_content (str): 财报文本内容
+            pdf_path (str): PDF文件路径
             
         Returns:
             Dict[str, str]: 主营业务信息
@@ -239,47 +236,26 @@ class ComprehensiveStockAnalyzer:
         business_info = {}
         
         try:
-            # 提取主营业务描述
-            for keyword in self.business_keywords:
-                pattern = rf'{keyword}[：:]\s*([^。\n]*[。\n]{{0,3}}[^。\n]*)'
-                matches = re.findall(pattern, text_content, re.IGNORECASE)
-                
-                if matches:
-                    # 取最长的匹配结果
-                    longest_match = max(matches, key=len)
-                    business_info['main_business'] = longest_match.strip()[:500]  # 限制长度
-                    break
+            # 使用简单的PDF文本提取
+            from llm_pdf_processor import PDFTextConverter
+            converter = PDFTextConverter()
+            text_content = converter.extract_text_from_pdf(pdf_path)
             
-            # 提取行业信息
-            industry_patterns = [
-                r'所属行业[：:]\s*([^\n。]{1,50})',
-                r'行业类别[：:]\s*([^\n。]{1,50})',
-                r'主要行业[：:]\s*([^\n。]{1,50})'
-            ]
+            # 简单的业务信息提取
+            if '是一家' in text_content and '专注于' in text_content:
+                match = re.search(r'([^。]*是一家[^。]*专注于[^。]*[。])', text_content)
+                if match:
+                    business_info['main_business'] = match.group(1).strip()
             
-            for pattern in industry_patterns:
-                matches = re.findall(pattern, text_content, re.IGNORECASE)
-                if matches:
-                    business_info['industry'] = matches[0].strip()
-                    break
-            
-            # 提取主要产品信息
-            product_patterns = [
-                r'主要产品[：:]\s*([^\n。]{1,200})',
-                r'产品类别[：:]\s*([^\n。]{1,200})',
-                r'核心产品[：:]\s*([^\n。]{1,200})'
-            ]
-            
-            for pattern in product_patterns:
-                matches = re.findall(pattern, text_content, re.IGNORECASE)
-                if matches:
-                    business_info['main_products'] = matches[0].strip()
-                    break
+            # 简单的行业提取
+            industry_match = re.search(r'所属行业[：:]\s*([^\n。]{1,50})', text_content)
+            if industry_match:
+                business_info['industry'] = industry_match.group(1).strip()
             
             return business_info
             
         except Exception as e:
-            print(f"提取主营业务信息失败: {e}")
+            print(f"降级业务信息提取失败: {e}")
             return {}
     
     def _get_recent_announcements(self, stock_code: str, trade_date: str, days: int = 30) -> List[Dict]:

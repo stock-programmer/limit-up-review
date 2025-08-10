@@ -194,7 +194,7 @@ def analyze_limit_up_comprehensive(trade_date: str):
                 
                 # 主营业务
                 business = stock['business_info'].get('main_business', '暂未获取到主营业务信息')
-                print(f"   🏭 主营业务: {business[:200]}{'...' if len(business) > 200 else ''}")
+                print(f"   🏭 主营业务: {business}")
                 
                 # 行业信息
                 industry = stock['business_info'].get('industry', '未知')
